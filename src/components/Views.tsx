@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Radio, Network, TrendingUp, Heart, Users, Music, Shield,
   Loader2, AlertCircle, ChevronRight, Download, Trash2,
-  BarChart2, Settings2, Database, Activity, CheckCircle2,
-  Play, Pause, Shuffle
+  Settings2, Database, Activity, TrendingUp as TrendingUpIcon
 } from 'lucide-react'
 import TrackCard from '../components/TrackCard'
 import { getRelated, getCharts, getCommunityFeed, getAdminMetrics, tuneEngine, formatDuration, formatPlays, scoreColor } from '../lib/api'
@@ -13,9 +12,11 @@ import { useStore } from '../store'
 import { SCENES } from '../data/constants'
 import type { UnifiedTrack } from '../types'
 
+type Scene = typeof SCENES[number]
+
 // ===================== STATION VIEW =====================
 export function StationView() {
-  const { stationSeed, setStationSeed, setActiveTab, localLikedIds, toggleLocalLike } = useStore()
+  const { stationSeed, setStationSeed, setActiveTab } = useStore()
   const [chain, setChain] = useState<UnifiedTrack[]>(stationSeed ? [stationSeed] : [])
   const current = chain[chain.length - 1]
 
@@ -42,7 +43,6 @@ export function StationView() {
 
   return (
     <div className="space-y-6">
-      {/* Chain breadcrumbs */}
       {chain.length > 1 && (
         <div className="flex items-center gap-2 flex-wrap">
           {chain.map((t, i) => (
@@ -56,8 +56,6 @@ export function StationView() {
           <button onClick={goBack} className="text-[10px] text-[#444] hover:text-[#666] ml-1">← Back</button>
         </div>
       )}
-
-      {/* Seed card */}
       <div className="relative rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] overflow-hidden p-5">
         {current.artworkUrl && (
           <div className="absolute inset-0 opacity-5 blur-3xl scale-110 bg-cover bg-center" style={{ backgroundImage: `url(${current.artworkUrl})` }} />
@@ -83,14 +81,10 @@ export function StationView() {
           </div>
         </div>
       </div>
-
-      {/* Info */}
       <div className="flex items-start gap-2 p-3 rounded-xl bg-[#0d0d0d] border border-[#1a1a1a] text-xs text-[#555]">
         <ChevronRight size={12} className="mt-0.5 text-[#c9a84c]/60 flex-shrink-0" />
         SoundCloud's recommendation engine surfaces tracks with similar sonic signatures. Each "Dig Similar" takes you deeper.
       </div>
-
-      {/* Results */}
       {isLoading && <div className="flex items-center gap-2 text-[#444] justify-center py-12"><Loader2 size={16} className="animate-spin" /><span className="text-sm">Finding related…</span></div>}
       {isError && <div className="flex items-center gap-2 text-red-400/60 justify-center py-12"><AlertCircle size={16} /><span className="text-sm">Failed to load</span></div>}
       {!isLoading && !isError && (
@@ -185,7 +179,7 @@ export function RabbitHoleView() {
 
 // ===================== CHARTS VIEW =====================
 export function ChartsView() {
-  const [activeScene, setActiveScene] = useState(SCENES[0])
+  const [activeScene, setActiveScene] = useState<Scene>(SCENES[0])
   const { setStationSeed, setActiveTab } = useStore()
 
   const { data: tracks = [], isLoading, isError, refetch } = useQuery({
@@ -243,7 +237,7 @@ export function ChartsView() {
 
 // ===================== CRATE VIEW =====================
 export function CrateView() {
-  const { localCrate, localLikedIds, toggleLocalLike, setStationSeed, setActiveTab } = useStore()
+  const { localCrate, toggleLocalLike, setStationSeed, setActiveTab } = useStore()
   const [sortMode, setSortMode] = useState<'saved' | 'gem' | 'plays'>('saved')
 
   const sorted = [...localCrate].sort((a, b) => {
@@ -276,7 +270,7 @@ export function CrateView() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-3">
-        {[['Saved', localCrate.length], ['Avg Gem', avgGem], ['Avg True', avgTrue]].map(([l, v]) => (
+        {([['Saved', localCrate.length], ['Avg Gem', avgGem], ['Avg True', avgTrue]] as [string, number][]).map(([l, v]) => (
           <div key={l} className="rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] p-3 text-center">
             <p className="text-xl font-bold text-[#e5e5e5]">{v}</p>
             <p className="text-[10px] text-[#444] uppercase tracking-wider mt-0.5">{l}</p>
@@ -285,8 +279,8 @@ export function CrateView() {
       </div>
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex gap-1 p-1 rounded-xl bg-[#0d0d0d] border border-[#1a1a1a]">
-          {[['saved', 'Saved'], ['gem', 'Gem Score'], ['plays', 'Obscurity']].map(([id, label]) => (
-            <button key={id} onClick={() => setSortMode(id as any)}
+          {([['saved', 'Saved'], ['gem', 'Gem Score'], ['plays', 'Obscurity']] as [string, string][]).map(([id, label]) => (
+            <button key={id} onClick={() => setSortMode(id as 'saved' | 'gem' | 'plays')}
               className={`px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-wider transition-all ${sortMode === id ? 'bg-[#c9a84c]/10 text-[#c9a84c]' : 'text-[#444] hover:text-[#666]'}`}>
               {label}
             </button>
@@ -383,7 +377,6 @@ export function SetBuilderView() {
         <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center"><Music size={18} className="text-purple-400" /></div>
         <div><h2 className="font-bold text-lg tracking-tight">Set Builder</h2><p className="text-xs text-[#555]">Build and plan your DJ set</p></div>
       </div>
-
       {setBuilderTracks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
           <Music size={32} className="text-[#333]" />
@@ -391,21 +384,18 @@ export function SetBuilderView() {
         </div>
       ) : (
         <>
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
-            {[['Tracks', setBuilderTracks.length], ['Avg BPM', Math.round(avgBpm) || '—'], ['Duration', `${Math.round(setBuilderTracks.reduce((s, t) => s + t.duration, 0) / 60000)}m`]].map(([l, v]) => (
+            {([['Tracks', setBuilderTracks.length], ['Avg BPM', Math.round(avgBpm) || '—'], ['Duration', `${Math.round(setBuilderTracks.reduce((s, t) => s + t.duration, 0) / 60000)}m`]] as [string, string | number][]).map(([l, v]) => (
               <div key={l} className="rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] p-3 text-center">
                 <p className="text-xl font-bold text-[#e5e5e5]">{v}</p>
                 <p className="text-[10px] text-[#444] uppercase tracking-wider mt-0.5">{l}</p>
               </div>
             ))}
           </div>
-
-          {/* BPM visualizer */}
           <div className="p-4 rounded-xl border border-[#1a1a1a] bg-[#0d0d0d]">
             <p className="text-[10px] text-[#444] uppercase tracking-wider mb-3">BPM Progression</p>
             <div className="flex items-end gap-1 h-12">
-              {sorted.filter(t => t.bpm).map((t, i) => {
+              {sorted.filter(t => t.bpm).map((t) => {
                 const h = ((t.bpm ?? 120) - 80) / (180 - 80) * 100
                 return (
                   <motion.div key={t.id} initial={{ height: 0 }} animate={{ height: `${h}%` }}
@@ -414,11 +404,9 @@ export function SetBuilderView() {
               })}
             </div>
           </div>
-
-          {/* Sort */}
           <div className="flex gap-2">
-            {[['added', 'Order Added'], ['bpm', 'Sort by BPM'], ['energy', 'Sort by Energy']].map(([id, label]) => (
-              <button key={id} onClick={() => setSortBy(id as any)}
+            {([['added', 'Order Added'], ['bpm', 'Sort by BPM'], ['energy', 'Sort by Energy']] as [string, string][]).map(([id, label]) => (
+              <button key={id} onClick={() => setSortBy(id as 'bpm' | 'energy' | 'added')}
                 className={`px-3 py-1.5 rounded-xl text-[10px] uppercase tracking-wider border transition-all ${sortBy === id ? 'border-[#c9a84c]/30 text-[#c9a84c] bg-[#c9a84c]/5' : 'border-[#1a1a1a] text-[#444]'}`}>
                 {label}
               </button>
@@ -427,8 +415,6 @@ export function SetBuilderView() {
               Clear
             </button>
           </div>
-
-          {/* Track list */}
           <div className="flex flex-col gap-2">
             {sorted.map((t, i) => (
               <div key={t.id} className="group flex items-center gap-3 p-3 rounded-xl border border-[#1a1a1a] bg-[#0d0d0d]">
@@ -472,7 +458,7 @@ export function AdminView() {
 
   const NAV = [
     { id: 'dashboard', label: 'Activity', icon: Activity },
-    { id: 'trends', label: 'Trends', icon: TrendingUp },
+    { id: 'trends', label: 'Trends', icon: TrendingUpIcon },
     { id: 'engine', label: 'Engine', icon: Settings2 },
     { id: 'system', label: 'System', icon: Database },
   ]
@@ -483,11 +469,10 @@ export function AdminView() {
         <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center"><Shield size={18} className="text-red-400" /></div>
         <div><h2 className="font-bold text-lg tracking-tight">Admin Dashboard</h2><p className="text-xs text-[#555]">Live platform metrics and engine control</p></div>
       </div>
-
       <div style={{ background: '#080808' }} className="rounded-2xl border border-white/5 overflow-hidden">
         <div className="flex border-b border-white/5">
           {NAV.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveSection(id as any)}
+            <button key={id} onClick={() => setActiveSection(id as 'dashboard' | 'trends' | 'engine' | 'system')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-medium transition-colors ${activeSection === id ? 'bg-red-500/10 text-red-300 border-b-2 border-red-500' : 'text-white/30 border-b-2 border-transparent hover:text-white/50'}`}>
               <Icon size={13} /><span className="hidden sm:inline uppercase tracking-wider">{label}</span>
             </button>
@@ -516,7 +501,7 @@ export function AdminView() {
                   <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Recent Searches</p>
                   <div className="flex flex-wrap gap-1.5">
                     {metrics.recentSearches.map((s, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded-full bg-white/3 border border-white/5 text-[10px] text-white/40">{s}</span>
+                      <span key={i} className="px-2 py-0.5 rounded-full text-[10px] text-white/40" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>{s}</span>
                     ))}
                   </div>
                 </div>
@@ -535,9 +520,9 @@ export function AdminView() {
                 <div key={ctrl.key}>
                   <div className="flex justify-between mb-1.5">
                     <span className="text-xs text-white/50">{ctrl.label}</span>
-                    <span className="text-xs text-[#c9a84c] font-mono">{(tuning as any)[ctrl.key].toFixed(2)}</span>
+                    <span className="text-xs text-[#c9a84c] font-mono">{(tuning as Record<string, number>)[ctrl.key].toFixed(2)}</span>
                   </div>
-                  <input type="range" min={0} max={2} step={0.1} value={(tuning as any)[ctrl.key]}
+                  <input type="range" min={0} max={2} step={0.1} value={(tuning as Record<string, number>)[ctrl.key]}
                     onChange={(e) => setTuning((t) => ({ ...t, [ctrl.key]: Number(e.target.value) }))}
                     className="w-full" />
                 </div>
@@ -552,15 +537,6 @@ export function AdminView() {
                   <div key={n} style={{ background: 'rgba(255,255,255,0.02)' }} className="rounded-xl p-3 border border-white/5">
                     <p className={`text-sm font-semibold ${c}`}>{s}</p>
                     <p className="text-[10px] text-white/30 mt-0.5">{n}</p>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">API Endpoints</p>
-                {[['GET', '/api/search'], ['GET', '/api/related/{id}'], ['GET', '/api/charts'], ['POST', '/api/auth/login'], ['POST', '/api/auth/register'], ['GET', '/api/community/feed']].map(([m, p]) => (
-                  <div key={p} style={{ background: 'rgba(255,255,255,0.02)' }} className="flex gap-3 p-2 rounded-lg border border-white/5 mb-1">
-                    <span className="text-[10px] text-green-400 font-mono w-8 flex-shrink-0">{m}</span>
-                    <span className="text-[10px] text-white/40 font-mono">{p}</span>
                   </div>
                 ))}
               </div>
