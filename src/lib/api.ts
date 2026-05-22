@@ -12,7 +12,7 @@ function url(path: string, params?: Record<string, string | number | undefined>)
   return u.toString()
 }
 
-function authHeaders(token?: string | null) {
+function authHeaders(token?: string | null): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
@@ -21,8 +21,6 @@ async function apiFetch<T>(endpoint: string, opts?: RequestInit): Promise<T> {
   if (!res.ok) throw new Error(`API error ${res.status}`)
   return res.json()
 }
-
-// ===================== SEARCH =====================
 
 export async function searchTracks(filters: Filters, limit = 24): Promise<UnifiedTrack[]> {
   return apiFetch(url('/api/search', {
@@ -44,8 +42,6 @@ export async function getRelated(trackId: string, platform = 'soundcloud'): Prom
 export async function getCharts(scene?: string, limit = 20): Promise<UnifiedTrack[]> {
   return apiFetch(url('/api/charts', { scene, limit }))
 }
-
-// ===================== AUTH =====================
 
 export async function register(email: string, password: string) {
   return apiFetch<{ token: string; user: { id: string; email: string; role: string; createdAt: string } }>(
@@ -74,8 +70,6 @@ export async function adminLogin(password: string) {
     })
 }
 
-// ===================== USER =====================
-
 export async function getCrate(token: string): Promise<UnifiedTrack[]> {
   return apiFetch(url('/api/user/crate'), { headers: authHeaders(token) })
 }
@@ -92,8 +86,6 @@ export async function getCommunityFeed(limit = 30): Promise<CommunityFeedItem[]>
   return apiFetch(url('/api/community/feed', { limit }))
 }
 
-// ===================== ADMIN =====================
-
 export async function getAdminMetrics(token: string): Promise<PlatformMetrics> {
   return apiFetch(url('/api/admin/metrics'), { headers: authHeaders(token) })
 }
@@ -105,8 +97,6 @@ export async function tuneEngine(tuning: Record<string, number>, token: string) 
     body: JSON.stringify(tuning)
   })
 }
-
-// ===================== UTILS =====================
 
 export function formatDuration(ms: number): string {
   const s = Math.floor(ms / 1000)
